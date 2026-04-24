@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { ArrowRight, Sparkles, Heart, Leaf, Truck } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
@@ -9,9 +9,9 @@ import gallery5 from "@/assets/gallery-5.jpg";
 import { categories, products } from "@/data/products";
 import ProductCard from "@/components/ProductCard";
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] as const } },
 };
 
 export default function Home() {
