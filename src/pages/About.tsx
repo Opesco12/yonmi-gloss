@@ -11,7 +11,7 @@ export default function About() {
           <span className="text-xs tracking-[0.3em] uppercase text-gold">Our Story</span>
           <h1 className="mt-3 font-display text-5xl md:text-6xl leading-[1.05]">Made for the women who <em className="gold-text not-italic">glow</em>.</h1>
           <p className="mt-6 text-muted-foreground leading-relaxed">
-            Lush was born in a tiny Lagos studio with one obsession: a lip gloss that feels as good as it looks.
+            Yonmi's Gloss was born in a tiny Lagos studio with one obsession: a lip gloss that feels as good as it looks.
             Every shade is hand-poured, dermatologist-tested, and formulated with skin-loving oils so your lips drink it in.
           </p>
           <p className="mt-4 text-muted-foreground leading-relaxed">
@@ -23,7 +23,7 @@ export default function About() {
         </motion.div>
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8 }}>
           <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-elegant">
-            <img src={hero} alt="Lush studio" width={1600} height={1200} className="w-full h-full object-cover" />
+            <img src={hero} alt="Yonmi's Gloss studio" width={1600} height={1200} className="w-full h-full object-cover" />
           </div>
         </motion.div>
       </section>

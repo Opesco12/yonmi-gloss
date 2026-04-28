@@ -22,7 +22,7 @@ export default function Gallery() {
         <div className="container py-16 md:py-24 text-center">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
             <span className="text-xs tracking-[0.3em] uppercase text-gold">Gallery</span>
-            <h1 className="mt-3 font-display text-5xl md:text-6xl">The Lush life</h1>
+            <h1 className="mt-3 font-display text-5xl md:text-6xl">The Yonmi's Gloss life</h1>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
               Moments, shines, and stories from our community.
             </p>

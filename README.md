@@ -1,3 +1,3 @@
-# Welcome to your Lovable project
+# Yonmi's Gloss
 
-TODO: Document your project here
+Yonmi's Gloss is a modern storefront for premium lip gloss products.

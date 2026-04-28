@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { buildWhatsAppLink } from "@/data/products";
 
 export default function WhatsAppFab() {
-  const href = buildWhatsAppLink("Hi Lush! I have a question about your lip glosses 💕");
+  const href = buildWhatsAppLink("Hi Yonmi's Gloss! I have a question about your lip glosses.");
   return (
     <motion.a
       href={href}

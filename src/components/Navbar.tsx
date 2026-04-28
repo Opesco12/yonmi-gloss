@@ -36,7 +36,7 @@ export default function Navbar() {
       <div className="container flex items-center justify-between h-16 md:h-20">
         <Link to="/" className="flex items-center gap-2 group">
           <span className="font-display text-2xl md:text-3xl font-medium tracking-tight">
-            Lush<span className="gold-text">.</span>
+            Yonmi's Gloss
           </span>
         </Link>
 

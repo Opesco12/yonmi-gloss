@@ -64,7 +64,7 @@ export default function Home() {
             className="relative"
           >
             <div className="relative aspect-[5/6] rounded-[2rem] overflow-hidden shadow-elegant">
-              <img src={heroImg} alt="Lush lip gloss collection" width={1600} height={1200} className="w-full h-full object-cover" />
+              <img src={heroImg} alt="Yonmi's Gloss lip gloss collection" width={1600} height={1200} className="w-full h-full object-cover" />
             </div>
             <motion.div
               animate={{ y: [0, -10, 0] }}
@@ -98,7 +98,7 @@ export default function Home() {
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={fadeUp} className="text-center max-w-2xl mx-auto">
           <span className="text-xs tracking-[0.3em] uppercase text-gold">Collections</span>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">Find your finish</h2>
-          <p className="mt-4 text-muted-foreground">From mirror-shine glossy to second-skin nudes — there's a Lush for every mood.</p>
+          <p className="mt-4 text-muted-foreground">From mirror-shine glossy to second-skin nudes, Yonmi's Gloss has a shade for every mood.</p>
         </motion.div>
 
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">

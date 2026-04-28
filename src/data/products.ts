@@ -79,4 +79,4 @@ export const buildWhatsAppLink = (message: string) =>
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 export const orderMessage = (product: Product, qty: number) =>
-  `Hello Lush! I'd like to order ${product.name} — ${product.shade} (x${qty}). Total: ${formatPrice(product.price * qty)}.`;
+  `Hello Yonmi's Gloss! I'd like to order ${product.name} — ${product.shade} (x${qty}). Total: ${formatPrice(product.price * qty)}.`;
