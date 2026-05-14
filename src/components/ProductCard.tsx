@@ -18,7 +18,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
             </span>
           )}
           <img
-            src={product.image}
+            src={product.images[0]}
             alt={product.name}
             loading="lazy"
             width={800}

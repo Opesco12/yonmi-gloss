@@ -1,6 +1,10 @@
 import { useState } from "react";
+import { signInWithEmailAndPassword, signOut } from "firebase/auth";
 import { useCatalog } from "@/hooks/useCatalog";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 import type { Product } from "@/data/products";
+import { auth } from "@/lib/firebase";
+import { uploadImageToCloudinary } from "@/lib/cloudinary";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,52 +31,200 @@ const initialDraft: DraftProduct = {
   name: "",
   price: 0,
   category: "lip-gloss",
-  image: "",
+  images: [],
   description: "",
   bestseller: false,
 };
 
 export default function Admin() {
-  const { products, categories, addProduct, updateProduct, removeProduct, resetProducts } = useCatalog();
+  const { user, loading: authLoading } = useAdminAuth();
+  const { products, categories, addProduct, updateProduct, removeProduct, loading, error, refreshProducts } = useCatalog();
   const [draft, setDraft] = useState<DraftProduct>(initialDraft);
   const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const onDraftImage = (file?: File | null) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      setDraft((prev) => ({ ...prev, image: String(reader.result || "") }));
-    };
-    reader.readAsDataURL(file);
+  const onDraftImage = async (files?: FileList | null) => {
+    if (!files?.length) return;
+    if (draft.images.length >= 3) return;
+
+    setBusy(true);
+    setActionError(null);
+    try {
+      const roomLeft = 3 - draft.images.length;
+      const selected = Array.from(files).slice(0, roomLeft);
+      const uploaded = await Promise.all(selected.map((file) => uploadImageToCloudinary(file)));
+      setDraft((prev) => ({ ...prev, images: [...prev.images, ...uploaded].slice(0, 3) }));
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Image upload failed.");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const onExistingImage = (id: string, file?: File | null) => {
+  const onExistingImageReplace = async (id: string, imageIndex: number, file?: File | null) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      updateProduct(id, { image: String(reader.result || "") });
-    };
-    reader.readAsDataURL(file);
+    setBusy(true);
+    setActionError(null);
+
+    try {
+      const url = await uploadImageToCloudinary(file);
+      const product = products.find((p) => p.id === id);
+      if (!product) return;
+      const next = [...product.images];
+      next[imageIndex] = url;
+      await updateProduct(id, { images: next.slice(0, 3) });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Image update failed.");
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const createProduct = () => {
-    if (!draft.name || !draft.category || !draft.image || draft.price <= 0) return;
+  const onExistingImageAdd = async (id: string, file?: File | null) => {
+    if (!file) return;
+    const product = products.find((p) => p.id === id);
+    if (!product || product.images.length >= 3) return;
+
+    setBusy(true);
+    setActionError(null);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      await updateProduct(id, { images: [...product.images, url].slice(0, 3) });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Image update failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const moveDraftImage = (index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= draft.images.length) return;
+    const next = [...draft.images];
+    [next[index], next[target]] = [next[target], next[index]];
+    setDraft((prev) => ({ ...prev, images: next }));
+  };
+
+  const removeDraftImage = (index: number) => {
+    setDraft((prev) => ({ ...prev, images: prev.images.filter((_, i) => i !== index) }));
+  };
+
+  const moveProductImage = async (product: Product, index: number, direction: -1 | 1) => {
+    const target = index + direction;
+    if (target < 0 || target >= product.images.length) return;
+    const next = [...product.images];
+    [next[index], next[target]] = [next[target], next[index]];
+    try {
+      await updateProduct(product.id, { images: next });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Image reorder failed.");
+    }
+  };
+
+  const removeProductImage = async (product: Product, index: number) => {
+    if (product.images.length <= 1) {
+      setActionError("A product must have at least one image.");
+      return;
+    }
+    const next = product.images.filter((_, i) => i !== index);
+    try {
+      await updateProduct(product.id, { images: next });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : "Image removal failed.");
+    }
+  };
+
+  const createProduct = async () => {
+    if (!draft.name || !draft.category || draft.images.length === 0 || draft.price <= 0) return;
     const slug = draft.slug ? slugify(draft.slug) : slugify(draft.name);
-    const id = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`);
-    addProduct({
-      ...draft,
-      id,
-      slug: slug || id,
-    });
-    setDraft(initialDraft);
+    const id = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}`;
+    setBusy(true);
+    setActionError(null);
+    try {
+      await addProduct({
+        ...draft,
+        id,
+        slug: slug || id,
+        images: draft.images.slice(0, 3),
+      });
+      setDraft(initialDraft);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Could not add product.");
+    } finally {
+      setBusy(false);
+    }
   };
+
+  const signIn = async () => {
+    setBusy(true);
+    setAuthError(null);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : "Sign in failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
+  if (authLoading) {
+    return <main className="container py-24">Checking admin access...</main>;
+  }
+
+  if (!user) {
+    return (
+      <main className="container py-24 md:py-28 max-w-lg">
+        <h1 className="font-display text-4xl md:text-5xl">Admin Login</h1>
+        <p className="mt-3 text-muted-foreground">Sign in to manage products.</p>
+        <div className="mt-8 grid gap-4">
+          <input
+            className="h-11 rounded-lg border border-border bg-background px-3"
+            placeholder="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            className="h-11 rounded-lg border border-border bg-background px-3"
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {authError && <p className="text-sm text-red-500">{authError}</p>}
+          <button
+            onClick={signIn}
+            disabled={busy}
+            className="rounded-full bg-foreground px-5 py-3 text-sm uppercase tracking-widest text-background disabled:opacity-60"
+          >
+            {busy ? "Signing in..." : "Sign in"}
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="container py-24 md:py-28">
-      <h1 className="font-display text-4xl md:text-5xl">Admin</h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="font-display text-4xl md:text-5xl">Admin</h1>
+        <button onClick={handleSignOut} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">
+          Sign out
+        </button>
+      </div>
       <p className="mt-3 text-muted-foreground">
         Manage products, prices, categories, and images without editing code.
       </p>
+      {error && <p className="mt-3 text-sm text-red-500">Catalog error: {error}</p>}
+      {actionError && <p className="mt-3 text-sm text-red-500">{actionError}</p>}
 
       <section className="mt-10 rounded-2xl border border-border p-5 md:p-6 bg-secondary/30">
         <h2 className="font-display text-2xl">Add Product</h2>
@@ -90,10 +242,26 @@ export default function Admin() {
           <textarea className="min-h-28 rounded-lg border border-border bg-background px-3 py-2 md:col-span-2" placeholder="Description"
             value={draft.description} onChange={(e) => setDraft((p) => ({ ...p, description: e.target.value }))} />
           <label className="text-sm md:col-span-2">
-            <span className="mb-1 block text-muted-foreground">Upload Image</span>
-            <input type="file" accept="image/*" onChange={(e) => onDraftImage(e.target.files?.[0])} />
+            <span className="mb-1 block text-muted-foreground">Upload Images (up to 3)</span>
+            <input type="file" accept="image/*" multiple onChange={(e) => onDraftImage(e.target.files)} />
           </label>
-          {draft.image && <img src={draft.image} alt="Draft preview" className="h-28 w-28 rounded-lg object-cover border border-border" />}
+          {draft.images.length > 0 && (
+            <div className="md:col-span-2 grid grid-cols-3 gap-3">
+              {draft.images.map((src, i) => (
+                <div key={`${src}-${i}`} className="rounded-lg border border-border p-2">
+                  <img src={src} alt="Draft preview" className="h-24 w-full rounded object-cover" />
+                  <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                    {i === 0 ? "Thumbnail" : `Image ${i + 1}`}
+                  </p>
+                  <div className="mt-2 flex gap-2">
+                    <button type="button" className="text-xs border rounded px-2 py-1" onClick={() => moveDraftImage(i, -1)}>←</button>
+                    <button type="button" className="text-xs border rounded px-2 py-1" onClick={() => moveDraftImage(i, 1)}>→</button>
+                    <button type="button" className="text-xs border rounded px-2 py-1 text-red-500" onClick={() => removeDraftImage(i)}>Remove</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input type="checkbox" checked={Boolean(draft.bestseller)}
               onChange={(e) => setDraft((p) => ({ ...p, bestseller: e.target.checked }))} />
@@ -101,8 +269,8 @@ export default function Admin() {
           </label>
         </div>
         <div className="mt-5">
-          <button onClick={createProduct} className="rounded-full bg-foreground px-5 py-3 text-sm uppercase tracking-widest text-background">
-            Add Product
+          <button onClick={createProduct} disabled={busy} className="rounded-full bg-foreground px-5 py-3 text-sm uppercase tracking-widest text-background disabled:opacity-60">
+            {busy ? "Saving..." : "Add Product"}
           </button>
         </div>
       </section>
@@ -111,38 +279,75 @@ export default function Admin() {
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-display text-2xl">Products ({products.length})</h2>
           <button
-            onClick={resetProducts}
+            onClick={refreshProducts}
             className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest"
           >
-            Reset to defaults
+            Refresh
           </button>
         </div>
 
         <div className="mt-5 space-y-4">
+          {loading && <p className="text-sm text-muted-foreground">Loading products...</p>}
           {products.map((product) => (
             <article key={product.id} className="rounded-2xl border border-border p-4 md:p-5 bg-background">
               <div className="grid gap-4 md:grid-cols-4">
-                <img src={product.image} alt={product.name} className="h-28 w-28 rounded-lg object-cover border border-border" />
+                <img src={product.images[0]} alt={product.name} className="h-28 w-28 rounded-lg object-cover border border-border" />
                 <div className="md:col-span-3 grid gap-3 md:grid-cols-2">
                   <input className="h-10 rounded-lg border border-border bg-background px-3" value={product.name}
-                    onChange={(e) => updateProduct(product.id, { name: e.target.value })} />
+                    onChange={async (e) => {
+                      try { await updateProduct(product.id, { name: e.target.value }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                    }} />
                   <input className="h-10 rounded-lg border border-border bg-background px-3" type="number" value={product.price}
-                    onChange={(e) => updateProduct(product.id, { price: Number(e.target.value) })} />
+                    onChange={async (e) => {
+                      try { await updateProduct(product.id, { price: Number(e.target.value) }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                    }} />
                   <select className="h-10 rounded-lg border border-border bg-background px-3" value={product.category}
-                    onChange={(e) => updateProduct(product.id, { category: e.target.value as Product["category"] })}>
+                    onChange={async (e) => {
+                      try { await updateProduct(product.id, { category: e.target.value as Product["category"] }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                    }}>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                   <input className="h-10 rounded-lg border border-border bg-background px-3 md:col-span-2" value={product.slug}
-                    onChange={(e) => updateProduct(product.id, { slug: slugify(e.target.value) })} />
+                    onChange={async (e) => {
+                      try { await updateProduct(product.id, { slug: slugify(e.target.value) }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                    }} />
                   <textarea className="min-h-24 rounded-lg border border-border bg-background px-3 py-2 md:col-span-2" value={product.description}
-                    onChange={(e) => updateProduct(product.id, { description: e.target.value })} />
-                  <label className="text-sm md:col-span-2">
-                    <span className="mb-1 block text-muted-foreground">Replace Image</span>
-                    <input type="file" accept="image/*" onChange={(e) => onExistingImage(product.id, e.target.files?.[0])} />
-                  </label>
+                    onChange={async (e) => {
+                      try { await updateProduct(product.id, { description: e.target.value }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                    }} />
+
+                  <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {product.images.map((src, i) => (
+                      <div key={`${product.id}-${i}`} className="rounded-lg border border-border p-2">
+                        <img src={src} alt="Product" className="h-24 w-full rounded object-cover" />
+                        <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {i === 0 ? "Thumbnail" : `Image ${i + 1}`}
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button type="button" className="text-xs border rounded px-2 py-1" onClick={() => moveProductImage(product, i, -1)}>←</button>
+                          <button type="button" className="text-xs border rounded px-2 py-1" onClick={() => moveProductImage(product, i, 1)}>→</button>
+                          <label className="text-xs border rounded px-2 py-1 cursor-pointer">
+                            Replace
+                            <input className="hidden" type="file" accept="image/*" onChange={(e) => onExistingImageReplace(product.id, i, e.target.files?.[0])} />
+                          </label>
+                          <button type="button" className="text-xs border rounded px-2 py-1 text-red-500" onClick={() => removeProductImage(product, i)}>Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {product.images.length < 3 && (
+                    <label className="text-sm md:col-span-2">
+                      <span className="mb-1 block text-muted-foreground">Add another image</span>
+                      <input type="file" accept="image/*" onChange={(e) => onExistingImageAdd(product.id, e.target.files?.[0])} />
+                    </label>
+                  )}
+
                   <label className="flex items-center gap-2 text-sm md:col-span-2">
                     <input type="checkbox" checked={Boolean(product.bestseller)}
-                      onChange={(e) => updateProduct(product.id, { bestseller: e.target.checked })} />
+                      onChange={async (e) => {
+                        try { await updateProduct(product.id, { bestseller: e.target.checked }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
+                      }} />
                     Bestseller
                   </label>
                 </div>
@@ -171,8 +376,14 @@ export default function Admin() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => {
-                if (pendingDelete) removeProduct(pendingDelete.id);
+              onClick={async () => {
+                if (pendingDelete) {
+                  try {
+                    await removeProduct(pendingDelete.id);
+                  } catch (err) {
+                    setActionError(err instanceof Error ? err.message : "Delete failed.");
+                  }
+                }
                 setPendingDelete(null);
               }}
             >

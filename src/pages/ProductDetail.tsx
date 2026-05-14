@@ -22,7 +22,7 @@ export default function ProductDetail() {
     );
   }
 
-  const gallery = [product.image, product.image, product.image];
+  const gallery = product.images.slice(0, 3);
   const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
   const total = product.price * qty;
 
