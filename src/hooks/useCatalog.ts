@@ -9,9 +9,9 @@ function readStoredProducts(): Product[] {
   try {
     const raw = window.localStorage.getItem(CATALOG_STORAGE_KEY);
     if (!raw) return defaultProducts;
-    const parsed = JSON.parse(raw) as Product[];
+    const parsed = JSON.parse(raw) as Array<Product & { shade?: string }>;
     if (!Array.isArray(parsed) || parsed.length === 0) return defaultProducts;
-    return parsed;
+    return parsed.map(({ shade: _shade, ...product }) => product);
   } catch {
     return defaultProducts;
   }

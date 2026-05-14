@@ -72,7 +72,6 @@ export default function ProductDetail() {
             {categories.find((c) => c.id === product.category)?.name ?? product.category}
           </span>
           <h1 className="mt-3 font-display text-4xl md:text-5xl leading-tight">{product.name}</h1>
-          <p className="mt-2 text-muted-foreground">{product.shade}</p>
 
           <div className="mt-6 flex items-baseline gap-3">
             <p className="font-display text-3xl">{formatPrice(product.price)}</p>

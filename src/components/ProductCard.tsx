@@ -34,7 +34,6 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
         <div className="mt-4 flex items-start justify-between gap-3">
           <div>
             <h3 className="font-display text-xl leading-tight">{product.name}</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{product.shade}</p>
           </div>
           <p className="text-sm font-medium whitespace-nowrap">{formatPrice(product.price)}</p>
         </div>

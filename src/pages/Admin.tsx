@@ -1,6 +1,16 @@
 import { useState } from "react";
 import { useCatalog } from "@/hooks/useCatalog";
 import type { Product } from "@/data/products";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 function slugify(value: string) {
   return value
@@ -15,7 +25,6 @@ type DraftProduct = Omit<Product, "id">;
 const initialDraft: DraftProduct = {
   slug: "",
   name: "",
-  shade: "",
   price: 0,
   category: "lip-gloss",
   image: "",
@@ -26,6 +35,7 @@ const initialDraft: DraftProduct = {
 export default function Admin() {
   const { products, categories, addProduct, updateProduct, removeProduct, resetProducts } = useCatalog();
   const [draft, setDraft] = useState<DraftProduct>(initialDraft);
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null);
 
   const onDraftImage = (file?: File | null) => {
     if (!file) return;
@@ -69,8 +79,6 @@ export default function Admin() {
         <div className="mt-5 grid gap-4 md:grid-cols-2">
           <input className="h-11 rounded-lg border border-border bg-background px-3" placeholder="Product name"
             value={draft.name} onChange={(e) => setDraft((p) => ({ ...p, name: e.target.value }))} />
-          <input className="h-11 rounded-lg border border-border bg-background px-3" placeholder="Shade"
-            value={draft.shade} onChange={(e) => setDraft((p) => ({ ...p, shade: e.target.value }))} />
           <input className="h-11 rounded-lg border border-border bg-background px-3" placeholder="Price (NGN)" type="number"
             value={draft.price || ""} onChange={(e) => setDraft((p) => ({ ...p, price: Number(e.target.value) }))} />
           <select className="h-11 rounded-lg border border-border bg-background px-3"
@@ -118,8 +126,6 @@ export default function Admin() {
                 <div className="md:col-span-3 grid gap-3 md:grid-cols-2">
                   <input className="h-10 rounded-lg border border-border bg-background px-3" value={product.name}
                     onChange={(e) => updateProduct(product.id, { name: e.target.value })} />
-                  <input className="h-10 rounded-lg border border-border bg-background px-3" value={product.shade}
-                    onChange={(e) => updateProduct(product.id, { shade: e.target.value })} />
                   <input className="h-10 rounded-lg border border-border bg-background px-3" type="number" value={product.price}
                     onChange={(e) => updateProduct(product.id, { price: Number(e.target.value) })} />
                   <select className="h-10 rounded-lg border border-border bg-background px-3" value={product.category}
@@ -143,7 +149,7 @@ export default function Admin() {
               </div>
               <div className="mt-4">
                 <button
-                  onClick={() => removeProduct(product.id)}
+                  onClick={() => setPendingDelete(product)}
                   className="rounded-full border border-red-400 px-4 py-2 text-xs uppercase tracking-widest text-red-500"
                 >
                   Delete
@@ -153,6 +159,28 @@ export default function Admin() {
           ))}
         </div>
       </section>
+
+      <AlertDialog open={Boolean(pendingDelete)} onOpenChange={(open) => !open && setPendingDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete product?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently remove {pendingDelete?.name ?? "this product"} from your catalog.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingDelete) removeProduct(pendingDelete.id);
+                setPendingDelete(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 }
