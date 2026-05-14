@@ -3,7 +3,7 @@ import matte from "@/assets/product-matte.jpg";
 import shimmer from "@/assets/product-shimmer.jpg";
 import nude from "@/assets/product-nude.jpg";
 
-export type Category = "glossy" | "matte" | "shimmer" | "nude";
+export type Category = "lip-gloss" | "lip-liners" | "lip-care";
 
 export interface Product {
   id: string;
@@ -18,57 +18,60 @@ export interface Product {
 }
 
 export const categories: { id: Category; name: string; tagline: string }[] = [
-  { id: "glossy", name: "Glossy", tagline: "High-shine, mirror finish" },
-  { id: "matte", name: "Matte", tagline: "Velvet kiss, all-day stay" },
-  { id: "shimmer", name: "Shimmer", tagline: "Liquid light, sun-kissed glow" },
-  { id: "nude", name: "Nude Collection", tagline: "Effortless, second-skin tones" },
+  { id: "lip-gloss", name: "Lip Gloss", tagline: "High-shine color and everyday gloss looks" },
+  { id: "lip-liners", name: "Lip Liners", tagline: "Shape, define, and lock in your lip look" },
+  { id: "lip-care", name: "Lip Care", tagline: "Hydration, repair, and everyday lip treatment" },
 ];
 
-export const products: Product[] = [
+export const defaultProducts: Product[] = [
   {
     id: "1", slug: "rose-glow", name: "Rose Glow", shade: "Pink Rosé",
-    price: 8500, category: "glossy", image: glossy, bestseller: true,
+    price: 8500, category: "lip-gloss", image: glossy, bestseller: true,
     description: "Our signature high-shine gloss in a fresh rosé pink. Hydrating, non-sticky and infused with vitamin E for a plumped, glassy finish that lasts.",
   },
   {
     id: "2", slug: "velvet-kiss", name: "Velvet Kiss", shade: "Berry Matte",
-    price: 9000, category: "matte",  image: matte,
+    price: 9000, category: "lip-liners",  image: matte,
     description: "A weightless matte formula that hugs the lips with a velvety, blurred finish. Long-wear and pigment-rich without ever drying you out.",
   },
   {
     id: "3", slug: "rose-shimmer", name: "Rose Shimmer", shade: "Champagne Rose",
-    price: 9500, category: "shimmer", image: shimmer, bestseller: true,
+    price: 9500, category: "lip-gloss", image: shimmer, bestseller: true,
     description: "Liquid sunlight in a tube. Fine rose-gold pearls catch every angle for a multi-dimensional glow that screams main character.",
   },
   {
     id: "4", slug: "honey-nude", name: "Honey Nude", shade: "Warm Caramel",
-    price: 8000, category: "nude", image: nude,
+    price: 8000, category: "lip-gloss", image: nude,
     description: "Your lips but better. A creamy nude in warm caramel — flattering, neutral, and impossibly easy to wear day to night.",
   },
   {
     id: "5", slug: "cherry-bloom", name: "Cherry Bloom", shade: "Bright Pink",
-    price: 8500, category: "glossy", image: glossy,
+    price: 8500, category: "lip-gloss", image: glossy,
     description: "Bold, juicy and unapologetic. A bright pink gloss with mirror shine that doubles as your luckiest charm.",
   },
   {
     id: "6", slug: "midnight-nude", name: "Midnight Nude", shade: "Cool Mauve",
-    price: 9000, category: "matte", image: matte,
+    price: 9000, category: "lip-liners", image: matte,
     description: "A cool mauve matte with editorial attitude. Perfect for the evening, the after-party, and every story in between.",
   },
   {
     id: "7", slug: "sunset-shimmer", name: "Sunset Shimmer", shade: "Coral Glow",
-    price: 9500, category: "shimmer", image: shimmer,
+    price: 9500, category: "lip-care", image: shimmer,
     description: "A coral shimmer that bottles golden hour. Wear it solo or layer over any shade for instant dimension.",
   },
   {
     id: "8", slug: "sand-nude", name: "Sand Nude", shade: "Soft Beige",
-    price: 8000, category: "nude", image: nude, bestseller: true,
+    price: 8000, category: "lip-care", image: nude, bestseller: true,
     description: "An iconic soft-beige nude with the gentlest pink undertone. The everyday gloss you'll never put down.",
   },
 ];
 
-export const getProduct = (slug: string) => products.find(p => p.slug === slug);
-export const getByCategory = (cat: Category) => products.filter(p => p.category === cat);
+export const products = defaultProducts;
+
+export const getProduct = (slug: string, list: Product[] = products) =>
+  list.find((p) => p.slug === slug);
+export const getByCategory = (cat: Category, list: Product[] = products) =>
+  list.filter((p) => p.category === cat);
 
 export const formatPrice = (n: number) =>
   "₦" + n.toLocaleString("en-NG");

@@ -6,8 +6,12 @@ import gallery1 from "@/assets/gallery-1.jpg";
 import gallery2 from "@/assets/gallery-2.jpg";
 import gallery3 from "@/assets/gallery-3.jpg";
 import gallery5 from "@/assets/gallery-5.jpg";
-import { categories, products } from "@/data/products";
+import { useCatalog } from "@/hooks/useCatalog";
 import ProductCard from "@/components/ProductCard";
+
+import lipLiner from "@/assets/lip-liner.JPG";
+import lipMask from "@/assets/lip-mask.JPG";
+import yonmi1 from "@/assets/yonmi_1.JPG";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -19,6 +23,7 @@ const fadeUp: Variants = {
 };
 
 export default function Home() {
+  const { products, categories } = useCatalog();
   const featured = products.filter((p) => p.bestseller);
 
   return (
@@ -221,12 +226,12 @@ export default function Home() {
           </p>
         </motion.div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[gallery1, gallery2, gallery3, gallery5].map((src, i) => (
+          {[gallery1, lipLiner, lipMask, yonmi1].map((src, i) => (
             <motion.a
               key={i}
-              href="https://instagram.com"
-              target="_blank"
-              rel="noreferrer"
+              // href="https://instagram.com"
+              // target="_blank"
+              // rel="noreferrer"
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}

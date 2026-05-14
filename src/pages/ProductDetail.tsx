@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Minus, Plus, Heart, ArrowLeft, Check } from "lucide-react";
-import { getProduct, formatPrice, buildWhatsAppLink, orderMessage, products } from "@/data/products";
+import { formatPrice, buildWhatsAppLink, orderMessage } from "@/data/products";
+import { useCatalog } from "@/hooks/useCatalog";
 import ProductCard from "@/components/ProductCard";
 
 export default function ProductDetail() {
+  const { products, getProduct, categories } = useCatalog();
   const { slug } = useParams<{ slug: string }>();
   const product = slug ? getProduct(slug) : undefined;
   const [qty, setQty] = useState(1);
@@ -66,7 +68,9 @@ export default function ProductDetail() {
 
         {/* Info */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}>
-          <span className="text-xs tracking-[0.3em] uppercase text-gold">{product.category}</span>
+          <span className="text-xs tracking-[0.3em] uppercase text-gold">
+            {categories.find((c) => c.id === product.category)?.name ?? product.category}
+          </span>
           <h1 className="mt-3 font-display text-4xl md:text-5xl leading-tight">{product.name}</h1>
           <p className="mt-2 text-muted-foreground">{product.shade}</p>
 

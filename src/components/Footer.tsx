@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Instagram, Mail } from "lucide-react";
-import { categories } from "@/data/products";
+import { useCatalog } from "@/hooks/useCatalog";
 
 export default function Footer() {
+  const { categories } = useCatalog();
   return (
     <footer className="mt-24 border-t border-border/60 bg-secondary/40">
       <div className="container py-16 grid gap-10 md:grid-cols-4">

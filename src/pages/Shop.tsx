@@ -1,9 +1,11 @@
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { products, categories, getByCategory, Category } from "@/data/products";
+import { type Category } from "@/data/products";
+import { useCatalog } from "@/hooks/useCatalog";
 import ProductCard from "@/components/ProductCard";
 
 export default function Shop() {
+  const { products, categories, getByCategory } = useCatalog();
   const { category } = useParams<{ category?: string }>();
   const cat = categories.find((c) => c.id === category);
   const list = cat ? getByCategory(cat.id as Category) : products;
