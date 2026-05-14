@@ -3,15 +3,16 @@ import { motion } from "framer-motion";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
-import g1 from "@/assets/gallery-1.jpg";
-import g2 from "@/assets/gallery-2.jpg";
-import g3 from "@/assets/gallery-3.jpg";
-import g4 from "@/assets/gallery-4.jpg";
-import g5 from "@/assets/gallery-5.jpg";
-import g6 from "@/assets/gallery-6.jpg";
-import hero from "@/assets/hero.jpg";
+import g1 from "@/assets/yonmi_1.JPG";
+import g2 from "@/assets/yonmi_2.JPG";
+import g3 from "@/assets/yonmi_3.JPG";
+import g4 from "@/assets/yonmi_4.JPG";
+import g5 from "@/assets/yonmi_5.JPG";
+import g7 from "@/assets/gallery-3.jpg";
+import g9 from "@/assets/gallery-2.jpg";
+import g0 from "@/assets/gallery-6.jpg";
 
-const images = [g1, g3, g2, g4, g6, g5, hero, g1, g3];
+const images = [g1, g2, g0, g4, g7, g3, g9, g5];
 
 export default function Gallery() {
   const [index, setIndex] = useState(-1);
@@ -20,9 +21,17 @@ export default function Gallery() {
     <>
       <section className="gradient-hero">
         <div className="container py-16 md:py-24 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-            <span className="text-xs tracking-[0.3em] uppercase text-gold">Gallery</span>
-            <h1 className="mt-3 font-display text-5xl md:text-6xl">The Yonmi's Gloss life</h1>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <span className="text-xs tracking-[0.3em] uppercase text-gold">
+              Gallery
+            </span>
+            <h1 className="mt-3 font-display text-5xl md:text-6xl">
+              The Yonmi's Gloss life
+            </h1>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
               Moments, shines, and stories from our community.
             </p>
@@ -38,7 +47,11 @@ export default function Gallery() {
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.6, delay: (i % 6) * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: (i % 6) * 0.06,
+                ease: [0.22, 1, 0.36, 1],
+              }}
               onClick={() => setIndex(i)}
               className="block w-full mb-4 md:mb-6 break-inside-avoid overflow-hidden rounded-2xl group relative"
             >
