@@ -4,10 +4,12 @@ import { motion } from "framer-motion";
 import { Minus, Plus, Heart, ArrowLeft, Check } from "lucide-react";
 import { formatPrice, buildWhatsAppLink, orderMessage } from "@/data/products";
 import { useCatalog } from "@/hooks/useCatalog";
+import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/ProductCard";
 
 export default function ProductDetail() {
   const { products, getProduct, categories } = useCatalog();
+  const { addToCart } = useCart();
   const { slug } = useParams<{ slug: string }>();
   const product = slug ? getProduct(slug) : undefined;
   const [qty, setQty] = useState(1);
@@ -104,6 +106,12 @@ export default function ProductDetail() {
 
           {/* CTA */}
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={() => addToCart(product, qty)}
+              className="group flex-1 inline-flex items-center justify-center gap-2 border border-foreground px-7 py-4 rounded-full text-sm uppercase tracking-widest hover:bg-foreground hover:text-background transition-colors shadow-soft"
+            >
+              Add to cart
+            </button>
             <a
               href={waLink}
               target="_blank"

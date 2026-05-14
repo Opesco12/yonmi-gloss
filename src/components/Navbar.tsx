@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
+import { useCart } from "@/hooks/useCart";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -14,6 +15,7 @@ const navLinks = [
 
 export default function Navbar() {
   const { categories } = useCatalog();
+  const { count } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -71,11 +73,16 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/shop"
-            className="hidden md:inline-flex items-center gap-2 text-sm tracking-wide uppercase text-foreground hover:text-primary transition-colors"
+            to="/cart"
+            className="hidden md:inline-flex relative items-center justify-center w-10 h-10 rounded-full border border-border hover:border-primary hover:text-primary transition-colors"
+            aria-label="Cart"
           >
             <ShoppingBag className="w-4 h-4" />
-            Shop
+            {count > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] leading-5 text-center">
+                {count}
+              </span>
+            )}
           </Link>
           <button
             aria-label="Toggle menu"

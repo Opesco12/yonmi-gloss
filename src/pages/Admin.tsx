@@ -46,6 +46,21 @@ export default function Admin() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [productEdits, setProductEdits] = useState<Record<string, Product>>({});
+
+  const getEditableProduct = (product: Product) => productEdits[product.id] ?? product;
+
+  const setProductEdit = (id: string, updater: (current: Product) => Product) => {
+    const base = productEdits[id] ?? products.find((p) => p.id === id);
+    if (!base) return;
+    setProductEdits((prev) => ({ ...prev, [id]: updater(base) }));
+  };
+
+  const isDirty = (product: Product) => {
+    const edit = productEdits[product.id];
+    if (!edit) return false;
+    return JSON.stringify(edit) !== JSON.stringify(product);
+  };
 
   const onDraftImage = async (files?: FileList | null) => {
     if (!files?.length) return;
@@ -74,9 +89,10 @@ export default function Admin() {
       const url = await uploadImageToCloudinary(file);
       const product = products.find((p) => p.id === id);
       if (!product) return;
-      const next = [...product.images];
+      const source = productEdits[id] ?? product;
+      const next = [...source.images];
       next[imageIndex] = url;
-      await updateProduct(id, { images: next.slice(0, 3) });
+      setProductEdit(id, (current) => ({ ...current, images: next.slice(0, 3) }));
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Image update failed.");
     } finally {
@@ -87,13 +103,15 @@ export default function Admin() {
   const onExistingImageAdd = async (id: string, file?: File | null) => {
     if (!file) return;
     const product = products.find((p) => p.id === id);
-    if (!product || product.images.length >= 3) return;
+    if (!product) return;
+    const source = productEdits[id] ?? product;
+    if (source.images.length >= 3) return;
 
     setBusy(true);
     setActionError(null);
     try {
       const url = await uploadImageToCloudinary(file);
-      await updateProduct(id, { images: [...product.images, url].slice(0, 3) });
+      setProductEdit(id, (current) => ({ ...current, images: [...current.images, url].slice(0, 3) }));
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Image update failed.");
     } finally {
@@ -114,28 +132,57 @@ export default function Admin() {
   };
 
   const moveProductImage = async (product: Product, index: number, direction: -1 | 1) => {
+    const source = productEdits[product.id] ?? product;
     const target = index + direction;
-    if (target < 0 || target >= product.images.length) return;
-    const next = [...product.images];
+    if (target < 0 || target >= source.images.length) return;
+    const next = [...source.images];
     [next[index], next[target]] = [next[target], next[index]];
-    try {
-      await updateProduct(product.id, { images: next });
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Image reorder failed.");
-    }
+    setProductEdit(product.id, (current) => ({ ...current, images: next }));
   };
 
   const removeProductImage = async (product: Product, index: number) => {
-    if (product.images.length <= 1) {
+    const source = productEdits[product.id] ?? product;
+    if (source.images.length <= 1) {
       setActionError("A product must have at least one image.");
       return;
     }
-    const next = product.images.filter((_, i) => i !== index);
+    const next = source.images.filter((_, i) => i !== index);
+    setProductEdit(product.id, (current) => ({ ...current, images: next }));
+  };
+
+  const saveProductChanges = async (product: Product) => {
+    const edited = productEdits[product.id];
+    if (!edited) return;
+    setBusy(true);
+    setActionError(null);
     try {
-      await updateProduct(product.id, { images: next });
+      await updateProduct(product.id, {
+        name: edited.name,
+        price: edited.price,
+        category: edited.category,
+        slug: edited.slug,
+        description: edited.description,
+        images: edited.images.slice(0, 3),
+        bestseller: edited.bestseller,
+      });
+      setProductEdits((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : "Image removal failed.");
+      setActionError(err instanceof Error ? err.message : "Save failed.");
+    } finally {
+      setBusy(false);
     }
+  };
+
+  const discardProductChanges = (id: string) => {
+    setProductEdits((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
   };
 
   const createProduct = async () => {
@@ -289,35 +336,28 @@ export default function Admin() {
         <div className="mt-5 space-y-4">
           {loading && <p className="text-sm text-muted-foreground">Loading products...</p>}
           {products.map((product) => (
+            (() => {
+              const editable = getEditableProduct(product);
+              return (
             <article key={product.id} className="rounded-2xl border border-border p-4 md:p-5 bg-background">
               <div className="grid gap-4 md:grid-cols-4">
-                <img src={product.images[0]} alt={product.name} className="h-28 w-28 rounded-lg object-cover border border-border" />
+                <img src={editable.images[0]} alt={editable.name} className="h-28 w-28 rounded-lg object-cover border border-border" />
                 <div className="md:col-span-3 grid gap-3 md:grid-cols-2">
-                  <input className="h-10 rounded-lg border border-border bg-background px-3" value={product.name}
-                    onChange={async (e) => {
-                      try { await updateProduct(product.id, { name: e.target.value }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                    }} />
-                  <input className="h-10 rounded-lg border border-border bg-background px-3" type="number" value={product.price}
-                    onChange={async (e) => {
-                      try { await updateProduct(product.id, { price: Number(e.target.value) }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                    }} />
-                  <select className="h-10 rounded-lg border border-border bg-background px-3" value={product.category}
-                    onChange={async (e) => {
-                      try { await updateProduct(product.id, { category: e.target.value as Product["category"] }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                    }}>
+                  <input className="h-10 rounded-lg border border-border bg-background px-3" value={editable.name}
+                    onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, name: e.target.value }))} />
+                  <input className="h-10 rounded-lg border border-border bg-background px-3" type="number" value={editable.price}
+                    onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, price: Number(e.target.value) }))} />
+                  <select className="h-10 rounded-lg border border-border bg-background px-3" value={editable.category}
+                    onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, category: e.target.value as Product["category"] }))}>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
-                  <input className="h-10 rounded-lg border border-border bg-background px-3 md:col-span-2" value={product.slug}
-                    onChange={async (e) => {
-                      try { await updateProduct(product.id, { slug: slugify(e.target.value) }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                    }} />
-                  <textarea className="min-h-24 rounded-lg border border-border bg-background px-3 py-2 md:col-span-2" value={product.description}
-                    onChange={async (e) => {
-                      try { await updateProduct(product.id, { description: e.target.value }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                    }} />
+                  <input className="h-10 rounded-lg border border-border bg-background px-3 md:col-span-2" value={editable.slug}
+                    onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, slug: slugify(e.target.value) }))} />
+                  <textarea className="min-h-24 rounded-lg border border-border bg-background px-3 py-2 md:col-span-2" value={editable.description}
+                    onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, description: e.target.value }))} />
 
                   <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {product.images.map((src, i) => (
+                    {editable.images.map((src, i) => (
                       <div key={`${product.id}-${i}`} className="rounded-lg border border-border p-2">
                         <img src={src} alt="Product" className="h-24 w-full rounded object-cover" />
                         <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -336,7 +376,7 @@ export default function Admin() {
                     ))}
                   </div>
 
-                  {product.images.length < 3 && (
+                  {editable.images.length < 3 && (
                     <label className="text-sm md:col-span-2">
                       <span className="mb-1 block text-muted-foreground">Add another image</span>
                       <input type="file" accept="image/*" onChange={(e) => onExistingImageAdd(product.id, e.target.files?.[0])} />
@@ -344,15 +384,30 @@ export default function Admin() {
                   )}
 
                   <label className="flex items-center gap-2 text-sm md:col-span-2">
-                    <input type="checkbox" checked={Boolean(product.bestseller)}
-                      onChange={async (e) => {
-                        try { await updateProduct(product.id, { bestseller: e.target.checked }); } catch (err) { setActionError(err instanceof Error ? err.message : "Update failed."); }
-                      }} />
+                    <input type="checkbox" checked={Boolean(editable.bestseller)}
+                      onChange={(e) => setProductEdit(product.id, (current) => ({ ...current, bestseller: e.target.checked }))} />
                     Bestseller
                   </label>
                 </div>
               </div>
               <div className="mt-4">
+                {isDirty(product) && (
+                  <div className="mb-3 flex gap-2">
+                    <button
+                      onClick={() => saveProductChanges(product)}
+                      disabled={busy}
+                      className="rounded-full bg-foreground px-4 py-2 text-xs uppercase tracking-widest text-background disabled:opacity-60"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={() => discardProductChanges(product.id)}
+                      className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest"
+                    >
+                      Discard
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={() => setPendingDelete(product)}
                   className="rounded-full border border-red-400 px-4 py-2 text-xs uppercase tracking-widest text-red-500"
@@ -361,6 +416,8 @@ export default function Admin() {
                 </button>
               </div>
             </article>
+              );
+            })()
           ))}
         </div>
       </section>

@@ -1,11 +1,8 @@
 import { Link } from "react-router-dom";
 import { motion, type Variants } from "framer-motion";
-import { ArrowRight, Sparkles, Heart, Leaf, Truck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero.jpg";
 import gallery1 from "@/assets/gallery-1.jpg";
-import gallery2 from "@/assets/gallery-2.jpg";
-import gallery3 from "@/assets/gallery-3.jpg";
-import gallery5 from "@/assets/gallery-5.jpg";
 import { useCatalog } from "@/hooks/useCatalog";
 import ProductCard from "@/components/ProductCard";
 
@@ -25,6 +22,13 @@ const fadeUp: Variants = {
 export default function Home() {
   const { products, categories } = useCatalog();
   const featured = products.filter((p) => p.bestseller);
+  const categoryCards = categories
+    .map((category) => {
+      const product = products.find((p) => p.category === category.id);
+      if (!product) return null;
+      return { category, image: product.images[0] };
+    })
+    .filter((item): item is { category: (typeof categories)[number]; image: string } => Boolean(item));
 
   return (
     <>
@@ -135,9 +139,8 @@ export default function Home() {
           </p>
         </motion.div>
 
-        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {categories.map((c, i) => {
-            const img = [gallery1, gallery2, gallery3, gallery5][i];
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {categoryCards.map(({ category: c, image: img }, i) => {
             return (
               <motion.div
                 key={c.id}
@@ -178,6 +181,7 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
+      {featured.length > 0 && (
       <section className="container pb-20 md:pb-28">
         <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
           <div>
@@ -205,6 +209,7 @@ export default function Home() {
           ))}
         </div>
       </section>
+      )}
 
       {/* INSTAGRAM-STYLE STRIP */}
       <section className="container pb-20 md:pb-28">
