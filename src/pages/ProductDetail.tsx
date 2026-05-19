@@ -6,14 +6,39 @@ import { formatPrice, buildWhatsAppLink, orderMessage } from "@/data/products";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ProductDetail() {
-  const { products, getProduct, categories } = useCatalog();
+  const { products, getProduct, categories, loading } = useCatalog();
   const { addToCart } = useCart();
   const { slug } = useParams<{ slug: string }>();
   const product = slug ? getProduct(slug) : undefined;
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
+
+  if (loading) {
+    return (
+      <section className="container py-10 md:py-14 grid lg:grid-cols-2 gap-12 lg:gap-20">
+        <div>
+          <Skeleton className="aspect-[4/5] w-full rounded-3xl" />
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={`thumb-skeleton-${i}`} className="aspect-square rounded-xl" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-3 w-1/3" />
+          <Skeleton className="h-10 w-2/3" />
+          <Skeleton className="h-8 w-1/4" />
+          <Skeleton className="h-5 w-full" />
+          <Skeleton className="h-5 w-11/12" />
+          <Skeleton className="h-12 w-full rounded-full" />
+          <Skeleton className="h-12 w-full rounded-full" />
+        </div>
+      </section>
+    );
+  }
 
   if (!product) {
     return (

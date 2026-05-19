@@ -11,8 +11,11 @@ import g5 from "@/assets/yonmi_5.JPG";
 import g7 from "@/assets/gallery-3.jpg";
 import g9 from "@/assets/gallery-2.jpg";
 import g0 from "@/assets/gallery-6.jpg";
+import gloss1 from "@/assets/gloss-1.jpg";
+import gloss2 from "@/assets/gloss-2.jpg";
+import gloss3 from "@/assets/gloss-3.jpg";
 
-const images = [g1, g2, g0, g4, g7, g3, g9, g5];
+const images = [g1, g0, g2, gloss2, g4, g3, gloss3, g9, g5, gloss1, g7];
 
 export default function Gallery() {
   const [index, setIndex] = useState(-1);

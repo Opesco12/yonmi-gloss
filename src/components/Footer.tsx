@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom";
 import { Instagram, Mail } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Footer() {
-  const { categories } = useCatalog();
+  const { categories, loading } = useCatalog();
   return (
     <footer className="mt-24 border-t border-border/60 bg-secondary/40">
       <div className="container py-16 grid gap-10 md:grid-cols-4">
@@ -16,7 +17,12 @@ export default function Footer() {
         <div>
           <h4 className="text-xs uppercase tracking-widest text-muted-foreground mb-4">Shop</h4>
           <ul className="space-y-2 text-sm">
-            {categories.map((c) => (
+            {loading && Array.from({ length: 3 }).map((_, i) => (
+              <li key={`footer-category-skeleton-${i}`}>
+                <Skeleton className="h-4 w-24" />
+              </li>
+            ))}
+            {!loading && categories.map((c) => (
               <li key={c.id}>
                 <Link to={`/shop/${c.id}`} className="hover:text-primary transition-colors">{c.name}</Link>
               </li>

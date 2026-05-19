@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function slugify(value: string) {
   return value
@@ -223,7 +224,15 @@ export default function Admin() {
   };
 
   if (authLoading) {
-    return <main className="container py-24">Checking admin access...</main>;
+    return (
+      <main className="container py-24 md:py-28 max-w-lg space-y-4">
+        <Skeleton className="h-10 w-40" />
+        <Skeleton className="h-4 w-56" />
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-11 w-40 rounded-full" />
+      </main>
+    );
   }
 
   if (!user) {
@@ -334,7 +343,21 @@ export default function Admin() {
         </div>
 
         <div className="mt-5 space-y-4">
-          {loading && <p className="text-sm text-muted-foreground">Loading products...</p>}
+          {loading &&
+            Array.from({ length: 3 }).map((_, i) => (
+              <article key={`admin-product-skeleton-${i}`} className="rounded-2xl border border-border p-4 md:p-5 bg-background">
+                <div className="grid gap-4 md:grid-cols-4">
+                  <Skeleton className="h-28 w-28 rounded-lg" />
+                  <div className="md:col-span-3 grid gap-3 md:grid-cols-2">
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                    <Skeleton className="h-10 w-full rounded-lg" />
+                    <Skeleton className="h-10 w-full rounded-lg md:col-span-2" />
+                    <Skeleton className="min-h-24 w-full rounded-lg md:col-span-2" />
+                  </div>
+                </div>
+              </article>
+            ))}
           {products.map((product) => (
             (() => {
               const editable = getEditableProduct(product);

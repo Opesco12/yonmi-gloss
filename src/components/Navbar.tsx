@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCart } from "@/hooks/useCart";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -14,7 +15,7 @@ const navLinks = [
 ];
 
 export default function Navbar() {
-  const { categories } = useCatalog();
+  const { categories, loading } = useCatalog();
   const { count } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -120,7 +121,10 @@ export default function Navbar() {
               ))}
               <div className="pt-4">
                 <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Categories</p>
-                {categories.map((c) => (
+                {loading && Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={`navbar-category-skeleton-${i}`} className="h-4 w-24 my-3" />
+                ))}
+                {!loading && categories.map((c) => (
                   <Link
                     key={c.id}
                     to={`/shop/${c.id}`}

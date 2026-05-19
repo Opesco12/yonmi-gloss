@@ -9,6 +9,7 @@ import ProductCard from "@/components/ProductCard";
 import lipLiner from "@/assets/lip-liner.JPG";
 import lipMask from "@/assets/lip-mask.JPG";
 import yonmi1 from "@/assets/yonmi_1.JPG";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 30 },
@@ -20,7 +21,7 @@ const fadeUp: Variants = {
 };
 
 export default function Home() {
-  const { products, categories } = useCatalog();
+  const { products, categories, loading } = useCatalog();
   const featured = products.filter((p) => p.bestseller);
   const categoryCards = categories
     .map((category) => {
@@ -145,7 +146,13 @@ export default function Home() {
         </motion.div>
 
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {categoryCards.map(({ category: c, image: img }, i) => {
+          {loading &&
+            categories.map((category) => (
+              <div key={category.id} className="relative overflow-hidden rounded-2xl aspect-[3/4]">
+                <Skeleton className="absolute inset-0 rounded-2xl" />
+              </div>
+            ))}
+          {!loading && categoryCards.map(({ category: c, image: img }, i) => {
             return (
               <motion.div
                 key={c.id}
@@ -186,7 +193,7 @@ export default function Home() {
       </section>
 
       {/* FEATURED PRODUCTS */}
-      {featured.length > 0 && (
+      {(loading || featured.length > 0) && (
         <section className="container pb-20 md:pb-28">
           <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
             <div>
@@ -205,7 +212,15 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
-            {featured.map((p, i) => (
+            {loading &&
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={`featured-skeleton-${i}`} className="space-y-3">
+                  <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-4 w-1/3" />
+                </div>
+              ))}
+            {!loading && featured.map((p, i) => (
               <ProductCard
                 key={p.id}
                 product={p}

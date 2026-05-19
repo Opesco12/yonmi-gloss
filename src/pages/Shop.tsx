@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { type Category } from "@/data/products";
 import { useCatalog } from "@/hooks/useCatalog";
 import ProductCard from "@/components/ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Shop() {
-  const { products, categories, getByCategory } = useCatalog();
+  const { products, categories, getByCategory, loading } = useCatalog();
   const { category } = useParams<{ category?: string }>();
   const cat = categories.find((c) => c.id === category);
   const list = cat ? getByCategory(cat.id as Category) : products;
@@ -48,10 +49,18 @@ export default function Shop() {
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-8">
-          {list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
+          {loading &&
+            Array.from({ length: 8 }).map((_, i) => (
+              <div key={`shop-skeleton-${i}`} className="space-y-3">
+                <Skeleton className="aspect-[4/5] w-full rounded-2xl" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+            ))}
+          {!loading && list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
         </div>
 
-        {list.length === 0 && (
+        {!loading && list.length === 0 && (
           <p className="text-center py-20 text-muted-foreground">No products in this collection yet.</p>
         )}
       </div>
