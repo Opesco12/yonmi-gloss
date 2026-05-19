@@ -5,7 +5,9 @@ Yonmi's Gloss is a modern storefront for premium lip gloss products.
 ## Firebase + Cloudinary Setup
 
 1. Copy `.env.example` to `.env` and fill:
-`VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_UPLOAD_PRESET`
+`VITE_CLOUDINARY_CLOUD_NAME`, `VITE_CLOUDINARY_UPLOAD_PRESET`,
+`VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`,
+`VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID`, `VITE_FIREBASE_APP_ID`
 2. In Firebase Console, enable:
 Email/Password Authentication and Firestore Database.
 3. Create an admin user in Firebase Auth (email/password).
