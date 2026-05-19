@@ -28,7 +28,12 @@ export default function Home() {
       if (!product) return null;
       return { category, image: product.images[0] };
     })
-    .filter((item): item is { category: (typeof categories)[number]; image: string } => Boolean(item));
+    .filter(
+      (
+        item,
+      ): item is { category: (typeof categories)[number]; image: string } =>
+        Boolean(item),
+    );
 
   return (
     <>
@@ -182,33 +187,33 @@ export default function Home() {
 
       {/* FEATURED PRODUCTS */}
       {featured.length > 0 && (
-      <section className="container pb-20 md:pb-28">
-        <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
-          <div>
-            <span className="text-xs tracking-[0.3em] uppercase text-gold">
-              Loved by you
-            </span>
-            <h2 className="mt-3 font-display text-4xl md:text-5xl">
-              Bestsellers
-            </h2>
+        <section className="container pb-20 md:pb-28">
+          <div className="flex items-end justify-between mb-12 flex-wrap gap-4">
+            <div>
+              <span className="text-xs tracking-[0.3em] uppercase text-gold">
+                Loved by you
+              </span>
+              <h2 className="mt-3 font-display text-4xl md:text-5xl">
+                Bestsellers
+              </h2>
+            </div>
+            <Link
+              to="/shop"
+              className="text-sm uppercase tracking-widest hover:text-primary transition-colors inline-flex items-center gap-2"
+            >
+              View all <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
-          <Link
-            to="/shop"
-            className="text-sm uppercase tracking-widest hover:text-primary transition-colors inline-flex items-center gap-2"
-          >
-            View all <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
-          {featured.map((p, i) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              index={i}
-            />
-          ))}
-        </div>
-      </section>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8">
+            {featured.map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
       {/* INSTAGRAM-STYLE STRIP */}
@@ -221,7 +226,7 @@ export default function Home() {
           className="text-center max-w-2xl mx-auto mb-10"
         >
           <span className="text-xs tracking-[0.3em] uppercase text-gold">
-            @lushgloss
+            @yonmi's gloss
           </span>
           <h2 className="mt-3 font-display text-4xl md:text-5xl">
             As seen on you

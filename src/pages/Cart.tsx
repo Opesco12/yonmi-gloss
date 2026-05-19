@@ -1,10 +1,29 @@
 import { Link } from "react-router-dom";
 import { Minus, Plus, Trash2 } from "lucide-react";
-import { formatPrice } from "@/data/products";
+import { buildWhatsAppLink, formatPrice } from "@/data/products";
 import { useCart } from "@/hooks/useCart";
 
 export default function Cart() {
   const { items, count, subtotal, updateQty, removeFromCart, clearCart } = useCart();
+  const sendCartToWhatsApp = () => {
+    if (!items.length) return;
+
+    const lines = items.map(
+      (item, index) =>
+        `${index + 1}. ${item.name} x${item.qty} - ${formatPrice(item.price * item.qty)}`,
+    );
+    const message = [
+      "Hello Yonmi's Gloss! I'd like to place this order:",
+      "",
+      ...lines,
+      "",
+      `Total items: ${count}`,
+      `Subtotal: ${formatPrice(subtotal)}`,
+    ].join("\n");
+
+    window.open(buildWhatsAppLink(message), "_blank", "noopener,noreferrer");
+    clearCart();
+  };
 
   return (
     <main className="container py-24 md:py-28">
@@ -58,6 +77,12 @@ export default function Cart() {
             <div className="flex gap-2">
               <button onClick={clearCart} className="rounded-full border border-border px-4 py-2 text-xs uppercase tracking-widest">
                 Clear cart
+              </button>
+              <button
+                onClick={sendCartToWhatsApp}
+                className="rounded-full bg-[#25D366] px-5 py-2 text-xs uppercase tracking-widest text-white"
+              >
+                Order on WhatsApp
               </button>
               <Link to="/shop" className="rounded-full bg-foreground text-background px-5 py-2 text-xs uppercase tracking-widest">
                 Keep shopping
