@@ -11,7 +11,7 @@ const navLinks = [
   { to: "/shop", label: "Shop" },
   { to: "/gallery", label: "Gallery" },
   { to: "/about", label: "About" },
-  { to: "/admin", label: "Admin" },
+  // { to: "/admin", label: "Admin" },
 ];
 
 export default function Navbar() {
@@ -28,7 +28,9 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => { setOpen(false); }, [location.pathname]);
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname]);
 
   return (
     <header
@@ -39,7 +41,10 @@ export default function Navbar() {
       }`}
     >
       <div className="container flex items-center justify-between h-16 md:h-20">
-        <Link to="/" className="flex items-center gap-2 group">
+        <Link
+          to="/"
+          className="flex items-center gap-2 group"
+        >
           <span className="font-display text-2xl md:text-3xl font-medium tracking-tight">
             Yonmi's Gloss
           </span>
@@ -53,7 +58,9 @@ export default function Navbar() {
               end={l.to === "/"}
               className={({ isActive }) =>
                 `text-sm tracking-wide uppercase relative py-2 transition-colors ${
-                  isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  isActive
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`
               }
             >
@@ -120,19 +127,26 @@ export default function Navbar() {
                 </NavLink>
               ))}
               <div className="pt-4">
-                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Categories</p>
-                {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={`navbar-category-skeleton-${i}`} className="h-4 w-24 my-3" />
-                ))}
-                {!loading && categories.map((c) => (
-                  <Link
-                    key={c.id}
-                    to={`/shop/${c.id}`}
-                    className="block py-2 text-sm text-foreground"
-                  >
-                    {c.name}
-                  </Link>
-                ))}
+                <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">
+                  Categories
+                </p>
+                {loading &&
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Skeleton
+                      key={`navbar-category-skeleton-${i}`}
+                      className="h-4 w-24 my-3"
+                    />
+                  ))}
+                {!loading &&
+                  categories.map((c) => (
+                    <Link
+                      key={c.id}
+                      to={`/shop/${c.id}`}
+                      className="block py-2 text-sm text-foreground"
+                    >
+                      {c.name}
+                    </Link>
+                  ))}
               </div>
             </div>
           </motion.div>
