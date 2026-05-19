@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Minus, Plus, Heart, ArrowLeft, Check } from "lucide-react";
+import { Minus, Plus, ArrowLeft } from "lucide-react";
 import { formatPrice, buildWhatsAppLink, orderMessage } from "@/data/products";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCart } from "@/hooks/useCart";
 import ProductCard from "@/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProductReviews } from "@/hooks/useProductReviews";
 
 export default function ProductDetail() {
   const { products, getProduct, categories, loading } = useCatalog();
@@ -15,6 +16,11 @@ export default function ProductDetail() {
   const product = slug ? getProduct(slug) : undefined;
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
+  const { reviews, loading: reviewsLoading, submitting: reviewsSubmitting, error: reviewsError, addReview } = useProductReviews(product?.id);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewActionError, setReviewActionError] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -61,6 +67,27 @@ export default function ProductDetail() {
   const total = product.price * qty;
 
   const waLink = buildWhatsAppLink(orderMessage(product, qty));
+  const averageRating = reviews.length ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+
+  const submitReview = async () => {
+    setReviewActionError(null);
+    if (!reviewName.trim() || !reviewComment.trim()) {
+      setReviewActionError("Please add your name and comment.");
+      return;
+    }
+    if (reviewRating < 1 || reviewRating > 5) {
+      setReviewActionError("Please select a rating between 1 and 5.");
+      return;
+    }
+    try {
+      await addReview({ name: reviewName, rating: reviewRating, comment: reviewComment });
+      setReviewName("");
+      setReviewComment("");
+      setReviewRating(5);
+    } catch (err) {
+      setReviewActionError(err instanceof Error ? err.message : "Could not submit review.");
+    }
+  };
 
   return (
     <>
@@ -210,6 +237,80 @@ export default function ProductDetail() {
           </div>
         </section>
       )}
+
+      <section className="container pb-20">
+        <div className="rounded-2xl border border-border p-5 md:p-6 bg-secondary/20">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="font-display text-3xl md:text-4xl">Reviews</h2>
+            <p className="text-sm text-muted-foreground">
+              {reviews.length > 0 ? `${averageRating.toFixed(1)}/5 from ${reviews.length} review${reviews.length === 1 ? "" : "s"}` : "No reviews yet"}
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-6 lg:grid-cols-2">
+            <div className="space-y-3">
+              <input
+                className="h-11 w-full rounded-lg border border-border bg-background px-3"
+                placeholder="Your name"
+                value={reviewName}
+                onChange={(e) => setReviewName(e.target.value)}
+              />
+              <select
+                className="h-11 w-full rounded-lg border border-border bg-background px-3"
+                value={reviewRating}
+                onChange={(e) => setReviewRating(Number(e.target.value))}
+              >
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <option key={value} value={value}>
+                    {value} star{value === 1 ? "" : "s"}
+                  </option>
+                ))}
+              </select>
+              <textarea
+                className="min-h-28 w-full rounded-lg border border-border bg-background px-3 py-2"
+                placeholder="Share your thoughts about this product"
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+              />
+              {(reviewActionError || reviewsError) && (
+                <p className="text-sm text-red-500">{reviewActionError ?? reviewsError}</p>
+              )}
+              <button
+                type="button"
+                onClick={submitReview}
+                disabled={reviewsSubmitting}
+                className="rounded-full bg-foreground px-5 py-3 text-xs uppercase tracking-widest text-background disabled:opacity-60"
+              >
+                {reviewsSubmitting ? "Submitting..." : "Submit review"}
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              {reviewsLoading &&
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={`review-skeleton-${i}`} className="rounded-xl border border-border bg-background p-4 space-y-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-1/4" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
+              {!reviewsLoading && reviews.length === 0 && (
+                <div className="rounded-xl border border-border bg-background p-4">
+                  <p className="text-sm text-muted-foreground">Be the first to review this product.</p>
+                </div>
+              )}
+              {!reviewsLoading &&
+                reviews.map((review) => (
+                  <article key={review.id} className="rounded-xl border border-border bg-background p-4">
+                    <p className="text-sm font-medium">{review.name}</p>
+                    <p className="text-xs text-gold mt-1">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</p>
+                    <p className="text-sm text-muted-foreground mt-2">{review.comment}</p>
+                  </article>
+                ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
